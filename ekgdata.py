@@ -1,11 +1,11 @@
+# ekgdata.py
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from scipy.signal import find_peaks
-import json
+
 class EKGdata:
     def __init__(self, ekg_dict):
-        '''Initialisiert die EKG-Daten mit einem Dictionary, das die EKG-Daten enthält.'''
         self.id = ekg_dict["id"]
         self.date = ekg_dict["date"]
         self.data = ekg_dict["result_link"]
@@ -13,29 +13,27 @@ class EKGdata:
 
     @staticmethod
     def load_by_id(ekg_id, ekg_dict):
-        '''Lädt die EKG-Daten anhand der ID aus einem Dictionary, das die EKG-Daten enthält.'''
         for ekg_index in ekg_dict:
             if ekg_index['id'] == ekg_id:
                 return EKGdata(ekg_index)
         return None
 
-    def peak_finder(self):
-        '''Findet die Peaks in den EKG-Daten und gibt die Indizes zurück.'''
-        df_subset = self.df.head(2000)
-        peaks, _ = find_peaks(df_subset["Messwerte in mV"], height=350)
+    def peak_finder(self, df=None):
+        if df is None:
+            df = self.df
+        peaks, _ = find_peaks(df["Messwerte in mV"], height=350)
         return peaks
 
-    def make_plot(self):
-        '''Erstellt einen Plot der EKG-Daten und markiert die Peaks.'''
-        df_subset = self.df.head(2000)
-        fig = px.line(df_subset, x="Zeit in ms", y="Messwerte in mV", title="EKG-Daten mit Peaks (Erste 2000 Datenpunkte)")
+    def make_plot(self, n_points=None):
+        df_to_plot = self.df if n_points is None else self.df.head(n_points)
+        fig = px.line(df_to_plot, x="Zeit in ms", y="Messwerte in mV", title="EKG-Daten mit Peaks")
 
-        peaks = self.peak_finder()
+        peaks = self.peak_finder(df_to_plot)
 
         # Peaks als rote Punkte hinzufügen
         fig.add_trace(go.Scatter(
-            x=df_subset["Zeit in ms"].iloc[peaks],
-            y=df_subset["Messwerte in mV"].iloc[peaks],
+            x=df_to_plot["Zeit in ms"].iloc[peaks],
+            y=df_to_plot["Messwerte in mV"].iloc[peaks],
             mode='markers',
             marker=dict(color='red', size=8),
             name='Peaks'
@@ -43,27 +41,20 @@ class EKGdata:
         return fig
 
     def estimate_hr(self):
-        '''Berrechnet die Herzfrequenz anhand der Peaks in den EKG-Daten.'''
-        df_subset = self.df.head(2000)
         peaks = self.peak_finder()
         peak_count = len(peaks)
-        time_max = df_subset["Zeit in ms"].max()
-        time_min = df_subset["Zeit in ms"].min()
+        time_max = self.df["Zeit in ms"].max()
+        time_min = self.df["Zeit in ms"].min()
         time_duration = (time_max - time_min) / 60000  # Umrechnung in Minuten
         hr = peak_count / time_duration
         return hr
 
-    def show_head(self):
-        '''Zeigt den Head der EKG-Daten an (Erste 2000 Datenpunkte).'''
-        print(self.df.head(2000))
-    
     def get_length_test(self):
-        # Assuming 'data' is a list of timestamps in milliseconds
-        start_time = self.ekg_dict['data'][0]
-        end_time = self.ekg_dict['data'][-1]
+        start_time = self.df['Zeit in ms'].iloc[0]
+        end_time = self.df['Zeit in ms'].iloc[-1]
         duration_ms = end_time - start_time
-        duration_s = duration_ms / 1000  # Convert milliseconds to seconds
-        return duration_s
+        duration_minutes = duration_ms / 60000  # Umrechnung in Minuten
+        return duration_minutes
 
 
 

@@ -1,11 +1,11 @@
 import streamlit as st
-import json
 from PIL import Image
 from def_persons import Person
 from ekgdata import EKGdata
 from make_plot import make_plot, get_zone_times, power_mean, power_max
 
-tab_Person_EKG, tab_test = st.tabs(["Person EKG", "test"])
+# Tabs definieren
+tab_Person_EKG, tab_test = st.tabs(["Person EKG", "Test"])
 
 with tab_Person_EKG:
     st.title('EKG Analyse App')
@@ -42,11 +42,13 @@ with tab_Person_EKG:
         selected_test = next(test for test in person_ekg_tests if test["id"] == st.session_state.current_test)
         ekg = EKGdata(selected_test)
 
-        fig = ekg.make_plot()
+        fig = ekg.make_plot(n_points=2000)  # Nur die ersten 2000 Punkte anzeigen
         st.plotly_chart(fig)
 
         hr = ekg.estimate_hr()
-        st.write(f"Herzfrequenz von {selected_user} beträgt ca {hr:.2f} BPM")
+        st.write(f"Herzfrequenz von {selected_user} beträgt ca. {hr:.2f} BPM")
+
+        duration_minutes = ekg.get_length_test()
+        st.write(f"Wie viele Minuten dauert der Test: {duration_minutes:.2f} Minuten")
 
         st.write("EKG ID: ", selected_test["id"])
-        st.write("Wie viele Sekunden dauert der Test: ", ekg.get_length_test())

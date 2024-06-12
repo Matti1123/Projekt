@@ -3,6 +3,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 def power_mean():
+    ''''''
     df = pd.read_csv("activity.csv", sep=',',header = 0)
     power_mean = df["PowerOriginal"].mean()
     return power_mean

@@ -5,6 +5,7 @@ from scipy.signal import find_peaks
 
 class EKGdata:
     def __init__(self, ekg_dict):
+        '''Initialisiert die EKG-Daten mit einem Dictionary, das die EKG-Daten enthält.'''
         self.id = ekg_dict["id"]
         self.date = ekg_dict["date"]
         self.data = ekg_dict["result_link"]
@@ -12,17 +13,20 @@ class EKGdata:
 
     @staticmethod
     def load_by_id(ekg_id, ekg_dict):
+        '''Lädt die EKG-Daten anhand der ID aus einem Dictionary, das die EKG-Daten enthält.'''
         for ekg_index in ekg_dict:
             if ekg_index['id'] == ekg_id:
                 return EKGdata(ekg_index)
         return None
 
     def peak_finder(self):
+        '''Findet die Peaks in den EKG-Daten und gibt die Indizes zurück.'''
         df_subset = self.df.head(2000)
         peaks, _ = find_peaks(df_subset["Messwerte in mV"], height=350)
         return peaks
 
     def make_plot(self):
+        '''Erstellt einen Plot der EKG-Daten und markiert die Peaks.'''
         df_subset = self.df.head(2000)
         fig = px.line(df_subset, x="Zeit in ms", y="Messwerte in mV", title="EKG-Daten mit Peaks (Erste 2000 Datenpunkte)")
 
@@ -39,6 +43,7 @@ class EKGdata:
         return fig
 
     def estimate_hr(self):
+        '''Berrechnet die Herzfrequenz anhand der Peaks in den EKG-Daten.'''
         df_subset = self.df.head(2000)
         peaks = self.peak_finder()
         peak_count = len(peaks)
@@ -49,6 +54,7 @@ class EKGdata:
         return hr
 
     def show_head(self):
+        '''Zeigt den Head der EKG-Daten an (Erste 2000 Datenpunkte).'''
         print(self.df.head(2000))
 
 

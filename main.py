@@ -46,7 +46,7 @@ with tab_Person_EKG:
         st.plotly_chart(fig)
 
         hr = ekg.estimate_hr()
-        st.write(f" Herzfrequenz von {selected_user} beträgt ca {hr:.2f} BPM")
-        st.write("Datum des Tests: ", selected_test["date"])
+        st.write(f"Herzfrequenz von {selected_user} beträgt ca {hr:.2f} BPM")
+
         st.write("EKG ID: ", selected_test["id"])
         st.write("Wie viele Sekunden dauert der Test: ", ekg.get_length_test())

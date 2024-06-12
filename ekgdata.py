@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from scipy.signal import find_peaks
-
+import json
 class EKGdata:
     def __init__(self, ekg_dict):
         self.id = ekg_dict["id"]
@@ -50,7 +50,14 @@ class EKGdata:
 
     def show_head(self):
         print(self.df.head(2000))
-
+    
+    def get_length_test(self):
+        # Assuming 'data' is a list of timestamps in milliseconds
+        start_time = self.ekg_dict['data'][0]
+        end_time = self.ekg_dict['data'][-1]
+        duration_ms = end_time - start_time
+        duration_s = duration_ms / 1000  # Convert milliseconds to seconds
+        return duration_s
 
 
 

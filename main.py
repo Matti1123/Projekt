@@ -41,17 +41,23 @@ with tab_Person_EKG:
     if "current_test" not in st.session_state:
         st.session_state.current_test = "None"
 
+    person_ekg_tests = Person.get_EKG_tests_by_name(st.session_state.current_user)  # Update this line to get EKG tests for the selected person
+
     st.session_state.current_test = st.selectbox(
-         "Wähle Test aus",
-         options= Person.get_EKG_tests(Person.get_person_data())
-         , key="sbTest")
-    
-    
-    ekg_dict = person_dict["ekg_tests"][0]
-    ekg = EKGdata(ekg_dict)
-    ekg.make_plot()
-    st.plotly_chart(ekg.fig)
-    st.write("EKG ID: ", ekg_dict["id"])
+        "Wähle Test aus",
+        options=[test["id"] for test in person_ekg_tests],  # Only show tests for the selected person
+        key="sbTest"
+    )
+
+    if st.session_state.current_test != "None":
+        selected_test = next(test for test in person_ekg_tests if test["id"] == st.session_state.current_test)
+        ekg = EKGdata(selected_test)
+        ekg.make_plot()
+        st.plotly_chart(ekg.fig)
+        st.write("EKG ID: ", selected_test["id"])
+        st.write("Datum: ", selected_test["date"])
+        duration = selected_test["duration"]
+        st.write("Duration (in seconds): ", duration)
     
 
 

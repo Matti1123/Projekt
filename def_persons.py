@@ -44,12 +44,9 @@ class Person:
                 return eintrag
             
     @staticmethod
-    def get_EKG_tests(person_data):
-        """Returns a list of EKG tests from the person_data dictionary."""
-        List_of_EKG_tests = []
-        for person in person_data:
-            List_of_EKG_tests.append(person["ekg_tests"])
-        return List_of_EKG_tests
+    def get_EKG_tests_by_name(name):
+        person_data = Person.find_person_data_by_name(name)
+        return person_data["ekg_tests"] if person_data else []
     
     
     def calc_age(self):

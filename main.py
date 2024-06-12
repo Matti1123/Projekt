@@ -2,7 +2,6 @@ import streamlit as st
 from PIL import Image
 from def_persons import Person
 from ekgdata import EKGdata
-from make_plot import make_plot, get_zone_times, power_mean, power_max
 
 # Tabs definieren
 tab_Person_EKG, tab_test = st.tabs(["Person EKG", "Test"])
@@ -42,13 +41,13 @@ with tab_Person_EKG:
         selected_test = next(test for test in person_ekg_tests if test["id"] == st.session_state.current_test)
         ekg = EKGdata(selected_test)
 
-        fig = ekg.make_plot(n_points=2000)  # Nur die ersten 2000 Punkte anzeigen
+        start_point_sec = st.slider("Startpunkt in Sekunden auswählen", 0.0, ekg.get_length_test()[0], 0.0, key="slider")
+        start_point_idx = ekg.get_index_from_time(start_point_sec)  # Umrechnung in Index
+        fig = ekg.make_plot(start=start_point_idx, n_points=2000)
         st.plotly_chart(fig)
 
         hr = ekg.estimate_hr()
         st.write(f"Herzfrequenz von {selected_user} beträgt ca. {hr:.2f} BPM")
 
-        duration_minutes = ekg.get_length_test()
-        st.write(f"Wie viele Minuten dauert der Test: {duration_minutes:.2f} Minuten")
-
         st.write("EKG ID: ", selected_test["id"])
+        st.write("Wie viele Sekunden dauert der Test: ", ekg.get_length_test()[0], "Sekunden")

@@ -3,51 +3,63 @@ from PIL import Image
 from def_persons import Person
 from ekgdata import EKGdata
 
-# Tabs definieren
-tab_Person_EKG, tab_test = st.tabs(["Person EKG", "Test"])
+# Set the page width
+st.set_page_config(layout="wide")
 
-with tab_Person_EKG:
-    st.title('EKG Analyse App')
+# Sidebar for select boxes
+st.sidebar.title('Select Options')
 
-    person_data = Person.get_person_data()
+# Load person data
+person_data = Person.get_person_data()
 
-    # Auswahl der Versuchsperson
-    selected_user = st.selectbox(
-        "Versuchsperson",
-        options=Person.get_names(person_data)
+# option for selecting user
+selected_user = st.sidebar.selectbox(
+    "Versuchsperson",
+    options=Person.get_names(person_data)
+)
+
+# Find selected person's data
+person_dict = Person.find_person_data_by_name(selected_user)
+
+# option for selecting test
+selected_test_id = st.sidebar.selectbox(
+    "Wähle Test aus",
+    options=[test["id"] for test in person_dict["ekg_tests"]],
+    key="sbTest"
+)
+
+# Find selected test data
+selected_test = next(test for test in person_dict["ekg_tests"] if test["id"] == selected_test_id)
+ekg = EKGdata(selected_test)
+#Slider für die EKG Daten
+
+start_point_sec = st.sidebar.slider("Startpunkt in Sekunden auswählen", 0.0, ekg.get_length_test()[0], 0.0, key="slider")
+start_point_idx = ekg.get_index_from_time(start_point_sec)  # Umrechnung in Index
+
+
+# Main content area
+st.title('EKG Analyse App')
+
+# Display selected user's information
+st.write("Currently selected user: " + selected_user)
+image = Image.open(person_dict["picture_path"])
+st.image(image, caption=selected_user)
+st.write("Geburtsjahr der Person:", person_dict["date_of_birth"])
+
+# Display EKG Tests information
+st.write("EKG Tests")
+if selected_test_id != "None":
+    fig = ekg.make_plot(start=start_point_idx, n_points=2000)
+    
+    #Optional: Adjust the width and height of the plot
+    fig.update_layout(
+        width=800,  # Adjust the width as needed
+        height=400  # Optionally adjust the height
     )
+    
+    st.plotly_chart(fig, use_container_width=False)  
 
-    st.write("Currently selected user: " + selected_user)
-    person_dict = Person.find_person_data_by_name(selected_user)
-    image = Image.open(person_dict["picture_path"])
-    st.image(image, caption=selected_user)
-    st.write("Geburtsjahr der Person:", person_dict["date_of_birth"])
-
-    # EKG Tests
-    st.write("EKG Tests")
-
-    if "current_test" not in st.session_state:
-        st.session_state.current_test = "None"
-
-    person_ekg_tests = person_dict["ekg_tests"]
-
-    st.session_state.current_test = st.selectbox(
-        "Wähle Test aus",
-        options=[test["id"] for test in person_ekg_tests],
-        key="sbTest"
-    )
-
-    if st.session_state.current_test != "None":
-        selected_test = next(test for test in person_ekg_tests if test["id"] == st.session_state.current_test)
-        ekg = EKGdata(selected_test)
-
-        start_point_sec = st.slider("Startpunkt in Sekunden auswählen", 0.0, ekg.get_length_test()[0], 0.0, key="slider")
-        start_point_idx = ekg.get_index_from_time(start_point_sec)  # Umrechnung in Index
-        fig = ekg.make_plot(start=start_point_idx, n_points=2000)
-        st.plotly_chart(fig)
-
-        hr = ekg.estimate_hr()
-        st.write(f"Herzfrequenz von {selected_user} beträgt ca. {hr:.2f} BPM")
-
-        st.write("EKG ID: ", selected_test["id"])
-        st.write("Wie viele Sekunden dauert der Test: ", ekg.get_length_test()[0], "Sekunden")
+    hr = ekg.estimate_hr()
+    st.write(f"Herzfrequenz von {selected_user} beträgt ca {hr:.2f} BPM")
+    st.write("EKG ID: ", selected_test["id"])
+    st.write("Wie viele Sekunden dauert der Test: ", ekg.get_length_test())

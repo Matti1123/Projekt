@@ -1,18 +1,69 @@
 import streamlit as st
 from PIL import Image
+from io import BytesIO
 from def_persons import Person
 from ekgdata import EKGdata
-import os
 import json
+import plotly.graph_objects as go
+import plotly.io as pio
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options
+import base64
+import os
+from streamlit_drawable_canvas import st_canvas
 
 # Seitenbreite festlegen
 st.set_page_config(layout="wide")
+
+# Initialisiere den Zustand für den Screenshot und das Canvas
+if "background_image" not in st.session_state:
+    st.session_state["background_image"] = None
+if "show_canvas" not in st.session_state:
+    st.session_state["show_canvas"] = False
+if "stroke_width" not in st.session_state:
+    st.session_state["stroke_width"] = 3
+if "stroke_color" not in st.session_state:
+    st.session_state["stroke_color"] = "#000000"
+if "bg_color" not in st.session_state:
+    st.session_state["bg_color"] = "#ffffff"
 
 # Laden der Personendaten
 person_data = Person.get_person_data()
 
 # Tabs für die Navigation
 tab1, tab2, tab3 = st.tabs(["EKG Analyse", "Neue Person hinzufügen", "Neuen EKG-Test hinzufügen"])
+
+def create_screenshot(fig):
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    
+    service = ChromeService(executable_path=ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    
+    # Convert the figure to an HTML string
+    html_str = pio.to_html(fig, full_html=False)
+    
+    # Save the HTML string to a temporary file with UTF-8 encoding
+    temp_file_path = os.path.abspath("temp_plot.html")
+    with open(temp_file_path, "w", encoding="utf-8") as f:
+        f.write(html_str)
+    
+    # Load the HTML file in the browser
+    driver.get("file://" + temp_file_path)
+    
+    # Take a screenshot and get it as base64
+    screenshot_base64 = driver.get_screenshot_as_base64()
+    driver.quit()
+    
+    return screenshot_base64
+
+def set_canvas_background(screenshot_base64):
+    background_image = Image.open(BytesIO(base64.b64decode(screenshot_base64)))
+    return background_image
 
 with tab1:
     # Sidebar für Auswahlboxen
@@ -71,6 +122,56 @@ with tab1:
                 st.write(f"Herzfrequenz von {selected_user} beträgt ca {hr:.2f} BPM")
                 st.write("EKG ID: ", selected_test["id"])
                 st.write("Wie viele Sekunden dauert der Test: ", ekg.get_length_test())
+
+                # Button zum Erstellen und Anzeigen des Screenshots in der Sidebar
+                if st.sidebar.button('Screenshot erstellen und anzeigen'):
+                    try:
+                        # Debugging-Nachricht: Start des Renderings
+                        st.write("Starte das Rendern des Plots...")
+
+                        # Screenshot erstellen
+                        screenshot_base64 = create_screenshot(fig)
+                        
+                        # Debugging-Nachricht: Rendern erfolgreich
+                        st.write("Plot erfolgreich gerendert.")
+
+                        # Hintergrundbild festlegen
+                        background_image = set_canvas_background(screenshot_base64)
+
+                        # Screenshot anzeigen
+                        st.image(background_image, caption='Screenshot des aktuellen Plots')
+                        st.session_state["background_image"] = background_image  # Speichern des Screenshots im Session State
+                        st.success("Screenshot erfolgreich erstellt und angezeigt.")
+                    except Exception as e:
+                        st.error(f"Fehler beim Erstellen des Screenshots: {e}")
+                        st.error(f"Fehlerdetails: {str(e)}")
+
+                # Button zum Erstellen und Anzeigen eines leeren Canvas in der Sidebar
+                if st.sidebar.button('Canvas anzeigen'):
+                    st.session_state["show_canvas"] = True
+
+                # Canvas und Optionen anzeigen, wenn der Zustand aktiviert ist
+                if st.session_state["show_canvas"]:
+                    col1, col2 = st.columns([4, 1])  # Verteilung des Layouts zwischen Canvas und Optionen
+                    with col1:
+                        canvas_result = st_canvas(
+                            fill_color=st.session_state["bg_color"],  # Hintergrundfarbe für Freihandzeichnung
+                            stroke_width=st.session_state["stroke_width"],
+                            stroke_color=st.session_state["stroke_color"],
+                            background_image=st.session_state["background_image"],
+                            update_streamlit=True,
+                            height=400,
+                            width=800,
+                            drawing_mode="freedraw",
+                            key="canvas"
+                        )
+                    with col2:
+                        st.write("### Optionen")
+                        st.session_state["stroke_width"] = st.slider("Strichstärke", 1, 25, st.session_state["stroke_width"])
+                        st.session_state["stroke_color"] = st.color_picker("Strichfarbe", st.session_state["stroke_color"])
+                        st.session_state["bg_color"] = st.color_picker("Hintergrundfarbe", st.session_state["bg_color"])
+
+                    st.success("Canvas erfolgreich angezeigt.")
         else:
             st.sidebar.warning("Kein EKG-Test verfügbar. Bitte fügen Sie einen neuen Test hinzu.")
     else:

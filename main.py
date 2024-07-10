@@ -1,19 +1,13 @@
 import streamlit as st
 from PIL import Image
-from io import BytesIO
 from def_persons import Person
 from ekgdata import EKGdata
 import json
 import plotly.graph_objects as go
-import plotly.io as pio
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.chrome.options import Options
-import base64
 import os
 from streamlit_drawable_canvas import st_canvas
 import math
+from canvas import update_drawing_mode, calculate_rectangle_length, create_screenshot, set_canvas_background, save_canvas_data
 
 # Seitenbreite festlegen
 st.set_page_config(layout="wide")
@@ -36,58 +30,11 @@ if "json_file_path" not in st.session_state:
 if "drawing_mode" not in st.session_state:
     st.session_state["drawing_mode"] = "freedraw"
 
-# Funktion zur Aktualisierung des Zeichenmodus
-def update_drawing_mode():
-    st.session_state["drawing_mode"] = st.session_state["drawing_mode_select"]
-
-# Funktion zur Berechnung der Länge eines Rechtecks
-def calculate_rectangle_length(rect):
-    x1, y1 = rect["left"], rect["top"]
-    x2, y2 = x1 + rect["width"], y1 + rect["height"]
-    length = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-    return length
-
 # Laden der Personendaten
 person_data = Person.get_person_data()
 
 # Tabs für die Navigation
 tab1, tab2, tab3 = st.tabs(["EKG Analyse", "Neue Person hinzufügen", "Neuen EKG-Test hinzufügen"])
-
-def create_screenshot(fig):
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    
-    service = ChromeService(executable_path=ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    
-    # Convert the figure to an HTML string
-    html_str = pio.to_html(fig, full_html=False)
-    
-    # Save the HTML string to a temporary file with UTF-8 encoding
-    temp_file_path = os.path.abspath("temp_plot.html")
-    with open(temp_file_path, "w", encoding="utf-8") as f:
-        f.write(html_str)
-    
-    # Load the HTML file in the browser
-    driver.get("file://" + temp_file_path)
-    
-    # Take a screenshot and get it as base64
-    screenshot_base64 = driver.get_screenshot_as_base64()
-    driver.quit()
-    
-    return screenshot_base64
-
-def set_canvas_background(screenshot_base64):
-    background_image = Image.open(BytesIO(base64.b64decode(screenshot_base64)))
-    return background_image
-
-def save_canvas_data(canvas_data):
-    file_path = "canvas_data.json"
-    with open(file_path, "w") as f:
-        json.dump(canvas_data, f)
-    return file_path
 
 with tab1:
     # Sidebar für Auswahlboxen
@@ -151,7 +98,7 @@ with tab1:
                 if st.sidebar.button('Screenshot erstellen und anzeigen'):
                     try:
                         # Debugging-Nachricht: Start des Renderings
-                        st.write("Starte das Rendern des Plots...")
+                        st.write("Starte das Renderen des Plots...")
 
                         # Screenshot erstellen
                         screenshot_base64 = create_screenshot(fig)

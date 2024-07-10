@@ -4,12 +4,43 @@ from def_persons import Person
 from ekgdata import EKGdata
 import os
 import json
+import plotly.graph_objects as go
 
 # Seitenbreite festlegen
 st.set_page_config(layout="wide")
 
 # Laden der Personendaten
 person_data = Person.get_person_data()
+
+# Farbmodi für Farbblindheit
+color_modes = {
+    "Normal": None,
+    "Protanopie": "protanopia",
+    "Deuteranopie": "deuteranopia",
+    "Tritanopie": "tritanopia"
+}
+
+# Farbpaletten für Farbblindheit
+color_palettes = {
+    "protanopia": ["#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFef45", "#fabed4"],
+    "deuteranopia": ["#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFef45", "#fabed4"],
+    "tritanopia": ["#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFef45", "#fabed4"]
+}
+
+# Sidebar für Farbblindheitseinstellungen
+st.sidebar.title('Farbblindheitseinstellungen')
+color_mode = st.sidebar.selectbox(
+    "Wähle den Farbblindmodus",
+    options=list(color_modes.keys())
+)
+
+# Funktion zum Anpassen der Farben basierend auf dem Farbmodus
+def adjust_colors(fig, mode):
+    if mode and mode != "Normal":
+        palette = color_palettes[mode]
+        for i, line in enumerate(fig.data):
+            line.marker.color = palette[i % len(palette)]
+    return fig
 
 # Tabs für die Navigation
 tab1, tab2, tab3 = st.tabs(["EKG Analyse", "Neue Person hinzufügen", "Neuen EKG-Test hinzufügen"])
@@ -58,18 +89,15 @@ with tab1:
             if selected_test_id != "None":
                 fig = ekg.make_plot(start=start_point_idx, n_points=2000)
                 
-                # Optional: Breite und Höhe des Plots anpassen
-                fig.update_layout(
-                    width=800,  # Breite nach Bedarf anpassen
-                    height=400  # Höhe optional anpassen
-                )
+                #Optional: Farben für Farbblindheit anpassen
+                fig = adjust_colors(fig, color_modes[color_mode])
                 
                 st.plotly_chart(fig, use_container_width=False)
 
                 hr = ekg.estimate_hr()
-                st.write("Testdatum: ", selected_test["date"])
                 st.write(f"Herzfrequenz von {selected_user} beträgt ca {hr:.2f} BPM")
                 st.write("EKG ID: ", selected_test["id"])
+                st.write("Testdatum: ", selected_test["date"])
                 st.write("Wie viele Sekunden dauert der Test: ", ekg.get_length_test())
         else:
             st.sidebar.warning("Kein EKG-Test verfügbar. Bitte fügen Sie einen neuen Test hinzu.")

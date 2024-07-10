@@ -62,7 +62,7 @@ Diese App ermöglicht die Analyse und Visualisierung von EKG-Daten sowie die Ver
     - Wählen Sie mithilfe des Sliders ein gewünschten Bereich des Ekg`s aus.
     - Drücken sie den "Erstellen sie ein Screenshot" button um von dem ausgewählten Bereich eine Abbildung zu erhalten.
     - Laden Sie die Abbildung in einen beschreibbaren Canvas hier kann der Diagnostiker auftretende Herzrhythmusstörungen einzeichnen.
-          - hierbei kann zwischen dem freedraw und dem mess modus gewchselt werden.
+          - hierbei kann zwischen dem freedraw und dem mess modus gewechselt werden.
     - Zuletzt können sie ihren beschriebenen Canvas noch per Button als Json-File abspeichern und zum Beispiel an Patienten versenden.
    
 
@@ -86,6 +86,7 @@ Verwenden Sie die Dropdown-Liste in der Seitenleiste, um den gewünschten Farbbl
 - `make_plot.py`: Skript zur Erstellung der Plots für Leistungs- und Herzfrequenzdaten.
 - `data/`: Verzeichnis zur Speicherung der JSON-Datei mit den Personendaten und der EKG-Daten.
 - `requirements.txt`: Datei zur Installation der benötigten Python-Pakete.
+- `canvas.py´: Skript zur ver/bearbeitung des EKG-Plots
 
 ## Beispiel-Dateien
 

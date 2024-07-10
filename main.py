@@ -13,6 +13,7 @@ from selenium.webdriver.chrome.options import Options
 import base64
 import os
 from streamlit_drawable_canvas import st_canvas
+import math
 
 # Seitenbreite festlegen
 st.set_page_config(layout="wide")
@@ -32,6 +33,19 @@ if "canvas_data" not in st.session_state:
     st.session_state["canvas_data"] = None
 if "json_file_path" not in st.session_state:
     st.session_state["json_file_path"] = None
+if "drawing_mode" not in st.session_state:
+    st.session_state["drawing_mode"] = "freedraw"
+
+# Funktion zur Aktualisierung des Zeichenmodus
+def update_drawing_mode():
+    st.session_state["drawing_mode"] = st.session_state["drawing_mode_select"]
+
+# Funktion zur Berechnung der Länge eines Rechtecks
+def calculate_rectangle_length(rect):
+    x1, y1 = rect["left"], rect["top"]
+    x2, y2 = x1 + rect["width"], y1 + rect["height"]
+    length = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+    return length
 
 # Laden der Personendaten
 person_data = Person.get_person_data()
@@ -160,6 +174,14 @@ with tab1:
                 if st.sidebar.button('Canvas anzeigen'):
                     st.session_state["show_canvas"] = True
 
+                # Auswahl des Zeichenmodus
+                st.sidebar.selectbox(
+                    "Zeichenmodus",
+                    options=["freedraw", "rect"],
+                    key="drawing_mode_select",
+                    on_change=update_drawing_mode
+                )
+
                 # Canvas und Optionen anzeigen, wenn der Zustand aktiviert ist
                 if st.session_state["show_canvas"]:
                     col1, col2 = st.columns([4, 1])  # Verteilung des Layouts zwischen Canvas und Optionen
@@ -172,11 +194,19 @@ with tab1:
                             update_streamlit=True,
                             height=400,
                             width=800,
-                            drawing_mode="freedraw",
+                            drawing_mode=st.session_state["drawing_mode"],
                             key="canvas"
                         )
                         if canvas_result.json_data is not None:
                             st.session_state["canvas_data"] = canvas_result.json_data
+                            # Berechne die Länge der Rechtecke
+                            if st.session_state["drawing_mode"] == "rect":
+                                rect_lengths = []
+                                for obj in canvas_result.json_data["objects"]:
+                                    if obj["type"] == "rect":
+                                        length = calculate_rectangle_length(obj)
+                                        rect_lengths.append(length)
+                                st.session_state["rect_lengths"] = rect_lengths
 
                     with col2:
                         st.write("### Optionen")
@@ -185,6 +215,12 @@ with tab1:
                         st.session_state["bg_color"] = st.color_picker("Hintergrundfarbe", st.session_state["bg_color"])
 
                     st.success("Canvas erfolgreich angezeigt.")
+
+                # Zeige die Längen der Rechtecke an
+                if "rect_lengths" in st.session_state:
+                    st.write("### Rechtecklängen")
+                    for i, length in enumerate(st.session_state["rect_lengths"]):
+                        st.write(f"Rechteck {i + 1}: {length:.2f} Pixel")
 
                 # Button zum Speichern der Canvas-Daten
                 if st.sidebar.button('Canvas-Daten speichern'):

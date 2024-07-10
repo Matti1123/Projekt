@@ -58,7 +58,13 @@ Diese App ermöglicht die Analyse und Visualisierung von EKG-Daten sowie die Ver
     - Wählen Sie eine Versuchsperson aus.
     - Geben Sie das Datum des EKG-Tests ein.
     - Laden Sie die EKG-Daten hoch und speichern Sie den Test für die ausgewählte Person.
+4. **Neuen EKG-Test hinzufügen**:
+    - Wählen Sie mithilfe des Sliders ein gewünschten Bereich des Ekg`s aus.
+    - Drücken sie den "Erstellen sie ein Screenshot" button um von dem ausgewählten Bereich eine Abbildung zu erhalten.
+    - Laden Sie die Abbildung in einen beschreibbaren Canvas hier kann der Diagnostiker auftretende Herzrhythmusstörungen einzeichnen.
+    - Zuletzt können sie ihren beschriebenen Canvas noch per Button als Json-File abspeichern und zum Beispiel an Patienten versenden.
 
+Abschließend muss aber gesagt werden das Streamlit für dieses interaktive Problem wirklich nicht das beste ist. Ich hatte schon große Pobleme nur den Screenshot auf der Website anzuzeigen, außerdem gibt es keine Events in Streamlit und somit muss alles per Button etc gesteuert werden. Ich würde im nachhinein empfehlen diese Art von Problem mit Javascribt/HTML zu bearbeiten um sich somit sehr viel Arbeit zu sparen. Mit python Streamlit sind glaube ich Analysen von Daten deutlich einfacher und smarter.
 
 
 ### Farbblindheitseinstellungen

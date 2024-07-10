@@ -28,39 +28,13 @@ if "stroke_color" not in st.session_state:
     st.session_state["stroke_color"] = "#000000"
 if "bg_color" not in st.session_state:
     st.session_state["bg_color"] = "#ffffff"
+if "canvas_data" not in st.session_state:
+    st.session_state["canvas_data"] = None
+if "json_file_path" not in st.session_state:
+    st.session_state["json_file_path"] = None
 
 # Laden der Personendaten
 person_data = Person.get_person_data()
-
-# Farbmodi für Farbblindheit
-color_modes = {
-    "Normal": None,
-    "Protanopie": "protanopia",
-    "Deuteranopie": "deuteranopia",
-    "Tritanopie": "tritanopia"
-}
-
-# Farbpaletten für Farbblindheit
-color_palettes = {
-    "protanopia": ["#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFef45", "#fabed4"],
-    "deuteranopia": ["#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFef45", "#fabed4"],
-    "tritanopia": ["#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFef45", "#fabed4"]
-}
-
-# Sidebar für Farbblindheitseinstellungen
-st.sidebar.title('Farbblindheitseinstellungen')
-color_mode = st.sidebar.selectbox(
-    "Wähle den Farbblindmodus",
-    options=list(color_modes.keys())
-)
-
-# Funktion zum Anpassen der Farben basierend auf dem Farbmodus
-def adjust_colors(fig, mode):
-    if mode and mode != "Normal":
-        palette = color_palettes[mode]
-        for i, line in enumerate(fig.data):
-            line.marker.color = palette[i % len(palette)]
-    return fig
 
 # Tabs für die Navigation
 tab1, tab2, tab3 = st.tabs(["EKG Analyse", "Neue Person hinzufügen", "Neuen EKG-Test hinzufügen"])
@@ -94,6 +68,12 @@ def create_screenshot(fig):
 def set_canvas_background(screenshot_base64):
     background_image = Image.open(BytesIO(base64.b64decode(screenshot_base64)))
     return background_image
+
+def save_canvas_data(canvas_data):
+    file_path = "canvas_data.json"
+    with open(file_path, "w") as f:
+        json.dump(canvas_data, f)
+    return file_path
 
 with tab1:
     # Sidebar für Auswahlboxen
@@ -139,15 +119,18 @@ with tab1:
             if selected_test_id != "None":
                 fig = ekg.make_plot(start=start_point_idx, n_points=2000)
                 
-                #Optional: Farben für Farbblindheit anpassen
-                fig = adjust_colors(fig, color_modes[color_mode])
+                # Optional: Breite und Höhe des Plots anpassen
+                fig.update_layout(
+                    width=800,  # Breite nach Bedarf anpassen
+                    height=400  # Höhe optional anpassen
+                )
                 
                 st.plotly_chart(fig, use_container_width=False)
 
                 hr = ekg.estimate_hr()
+                st.write("Testdatum: ", selected_test["date"])
                 st.write(f"Herzfrequenz von {selected_user} beträgt ca {hr:.2f} BPM")
                 st.write("EKG ID: ", selected_test["id"])
-                st.write("Testdatum: ", selected_test["date"])
                 st.write("Wie viele Sekunden dauert der Test: ", ekg.get_length_test())
 
                 # Button zum Erstellen und Anzeigen des Screenshots in der Sidebar
@@ -192,6 +175,9 @@ with tab1:
                             drawing_mode="freedraw",
                             key="canvas"
                         )
+                        if canvas_result.json_data is not None:
+                            st.session_state["canvas_data"] = canvas_result.json_data
+
                     with col2:
                         st.write("### Optionen")
                         st.session_state["stroke_width"] = st.slider("Strichstärke", 1, 25, st.session_state["stroke_width"])
@@ -199,6 +185,19 @@ with tab1:
                         st.session_state["bg_color"] = st.color_picker("Hintergrundfarbe", st.session_state["bg_color"])
 
                     st.success("Canvas erfolgreich angezeigt.")
+
+                # Button zum Speichern der Canvas-Daten
+                if st.sidebar.button('Canvas-Daten speichern'):
+                    if st.session_state["canvas_data"]:
+                        json_file_path = save_canvas_data(st.session_state["canvas_data"])
+                        st.session_state["json_file_path"] = json_file_path
+                        st.success(f"Canvas-Daten erfolgreich gespeichert: {json_file_path}")
+
+                # Link zur gespeicherten JSON-Datei anzeigen
+                if st.session_state["json_file_path"]:
+                    st.write("### Gespeicherte Canvas-Daten")
+                    st.markdown(f"[Canvas JSON Datei]({st.session_state['json_file_path']})")
+
         else:
             st.sidebar.warning("Kein EKG-Test verfügbar. Bitte fügen Sie einen neuen Test hinzu.")
     else:

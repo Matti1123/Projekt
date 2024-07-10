@@ -66,7 +66,6 @@ Diese App ermöglicht die Analyse und Visualisierung von EKG-Daten sowie die Ver
     - Zuletzt können sie ihren beschriebenen Canvas noch per Button als Json-File abspeichern und zum Beispiel an Patienten versenden.
    
 
-Abschließend muss man sagen, dass Streamlit wirklich nicht die beste Lösung für dieses interaktive Problem ist. Ich hatte schon große Probleme nur den Screenshot auf der Webseite anzuzeigen, außerdem gibt es in Streamlit keine Events und somit muss alles per Button aufgezeichnet werden, auch die Messung des R-Peak Abstandes wäre mit anderen Programmiersprachen viel einfacher gewesen. Im Nachhinein würde ich empfehlen, solche Probleme mit Javascript/HTML zu lösen, um sich viel Arbeit zu ersparen. Mit Python Streamlit ist die Datenanalyse meiner Meinung nach deutlich einfacher und intelligenter.
 
 
 ### Farbblindheitseinstellungen
@@ -96,4 +95,7 @@ Verwenden Sie die Dropdown-Liste in der Seitenleiste, um den gewünschten Farbbl
 
 ---
 
-Dieses Projekt bietet eine umfassende Lösung zur Verwaltung und Analyse von EKG-Daten, angepasst an die Bedürfnisse von Personen mit verschiedenen Formen von Farbblindheit.
+Es ist normal zwischen 3-5 Minuten die Requirements herunterzuladen.
+
+
+Abschließend muss man sagen, dass Streamlit wirklich nicht die beste Lösung für dieses interaktive Problem ist. Ich hatte schon große Probleme nur den Screenshot auf der Webseite anzuzeigen, außerdem gibt es in Streamlit keine Events und somit muss alles per Button aufgezeichnet werden, auch die Messung des R-Peak Abstandes wäre mit anderen Programmiersprachen viel einfacher gewesen. Im Nachhinein würde ich empfehlen, solche Probleme mit Javascript/HTML zu lösen, um sich viel Arbeit zu ersparen. Mit Python Streamlit ist die Datenanalyse meiner Meinung nach deutlich einfacher und intelligenter.
